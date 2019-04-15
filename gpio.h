@@ -1,5 +1,5 @@
 //
-//	EGRE 364
+//  EGRE 364
 //  Spring 2019
 //
 //  gpio.h
@@ -57,34 +57,6 @@ typedef enum {
 	ODR_LOW		= 0ul,
 	ODR_HIGH	=	1ul
 } GPIO_ODR_ENUM;
-
-typedef enum {
-	BITS_7 = 0x10000000ul,
-	BITS_8 = 0ul,
-	BITS_9 = 0x1000ul
-} USART_WORDLEN_ENUM;
-
-typedef enum {
-	NOT_OVER8 = 0ul, 
-	OVER8 		= 0x8000ul
-} USART_OVER8_ENUM;
-
-typedef enum {
-	STOP_1 		= 0ul,
-	STOP_0_5	= 0x1000ul,
-	STOP_2		= 0x2000ul,
-	STOP_1_5  = 0x3000ul
-} USART_STOPBIT_ENUM;
-
-typedef enum {
-	PARITY_OFF	= 0ul,
-	PARITY_ON		= 0x400ul
-} USART_PARITYEN_ENUM;
-
-typedef enum {
-	PARITY_EVEN	= 0ul,
-	PARITY_ODD	= 0x200ul
-} USART_PARITY_ENUM;
 
 typedef struct {
 	GPIO_TypeDef* 		port;
