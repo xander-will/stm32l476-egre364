@@ -13,8 +13,6 @@ typedef struct {
 } ADC_Channel;
 
 void ADC_Init(ADC_TypeDef *ADCx, int resolution) {
-	int wait_time;
-	
 	RCC->AHB2ENR |= RCC_AHB2ENR_ADCEN;
 	ADCx->CR &= ~ADC_CR_ADEN;
 	SYSCFG->CFGR1 |= SYSCFG_CFGR1_BOOSTEN;	// voltage booster
@@ -23,14 +21,6 @@ void ADC_Init(ADC_TypeDef *ADCx, int resolution) {
 	ADC123_COMMON->CCR &=	~(0x3 << 16);			// set clock sync to HCLK/1 (01)
 	ADC123_COMMON->CCR |= 1 << 16;		
 	ADC123_COMMON->CCR &= ~0x1F;						// set ADCs as independent (00000)
-	
-	// ADC wakeup, as written by Yifeng Zu
-	if ((ADCx->CR & ADC_CR_DEEPPWD) == ADC_CR_DEEPPWD)
-		ADCx->CR &= ~ADC_CR_DEEPPWD;
-	ADCx->CR |= ADC_CR_ADVREGEN;	// enable internal voltage regulator
-	wait_time = WAIT_LEN;
-	while (wait_time != 0)
-		wait_time--;
 	
 	ADCx->CFGR &= ~(0x3 << 3);	// selecting resolution
 	switch (resolution) {
@@ -49,7 +39,17 @@ void ADC_Init(ADC_TypeDef *ADCx, int resolution) {
 	}
 	ADCx->CFGR &= ~ADC_CFGR_ALIGN;
 }
-
+void ADC_Enable(ADC_TypeDef *ADCx) {
+	int wait_time;
+	
+	// ADC wakeup, as written by Yifeng Zu
+	if ((ADCx->CR & ADC_CR_DEEPPWD) == ADC_CR_DEEPPWD)
+		ADCx->CR &= ~ADC_CR_DEEPPWD;
+	ADCx->CR |= ADC_CR_ADVREGEN;	// enable internal voltage regulator
+	wait_time = WAIT_LEN;
+	while (wait_time != 0)
+		wait_time--;
+}
 static int pin_to_channel(GPIO_Pin_Info *pin) {
 	switch (pin->port_char) {
 		case 'A': default:
@@ -99,32 +99,38 @@ static int pin_to_channel(GPIO_Pin_Info *pin) {
 		case 'F':
 			switch (pin->pin_num) {
 				case 3: default:
-					return 6;
+					return 6; // ADC3_IN 6
 				case 4:
-					return 7;
+					return 7; // ADC3_IN 7
 				case 5:
-					return 8;
+					return 8; // ADC3_IN 8
 				case 6:
-					return 9;
+					return 9; // ADC3_IN 9
 				case 7:
-					return 10;
+					return 10; // ADC3_IN 10
 				case 8:
-					return 11;
+					return 11; // ADC3_IN 11
 				case 9:
-					return 12;
+					return 12; // ADC3_IN 12
 				case 10:
-					return 13;
+					return 13; // ADC3_IN 13
 			}
 			break;
 	}
 }
-
+GPIO_Pin_Info *ADC_PinInit(char port, uint8_t pin, GPIO_PUPDR_ENUM pupd) {
+	GPIO_Pin_Info *p = GPIO_PinInit(port, pin, MODER_AF, OTYPER_PP, OSPEEDR_HS, pupd);
+	p->port->ASCR |= 1ul << p->pin_num;
+	return p; 
+}
 ADC_Channel *ADC_CreateChannel(ADC_TypeDef *ADCx, GPIO_Pin_Info *pin) {
 	ADC_Channel *a;
+	
 	a = malloc(sizeof(ADC_Channel));
 	a->ADCx = ADCx;
 	a->pin	= pin;
 	a->channel = pin_to_channel(pin);
+	ADCx->DIFSEL |= 1ul << a->channel;
 	return a;
 }
 
