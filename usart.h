@@ -2,12 +2,24 @@
 //  EGRE 364
 //  Spring 2019
 //
-//  exti.h
+//  usart.h
 //
 //  written by Xander Will / George Constantine
 //
 //  'USART communication wrapping'
 //
+
+/* 
+   this isn't finished :/
+   wanna eventually get it
+	 so that it works like
+	 the python serial module.
+	 DMA-enabled circular buffer
+	 with readline() and read()
+	 support, write() should 
+	 work pretty much like it 
+	 already works here
+*/
 
 #pragma once
 
@@ -80,7 +92,7 @@ void USART_Init(GPIO_Pin_Info *tx_pin, USART_TypeDef *USARTx, uint32_t baud_rate
 	if (tx_pin->pin_num <= 6)
 		tx_pin->port->AFR[0] |= af << (4 * tx_pin->pin_num);
 	else
-		tx_pin->port->AFR[0] |= af << (4 * (tx_pin->pin_num - 8));
+		tx_pin->port->AFR[1] |= af << (4 * (tx_pin->pin_num - 8));
 	
 	USARTx->CR1 &= ~USART_CR1_UE; // disable
 	USARTx->CR1 &= ~USART_CR1_M;	// word length

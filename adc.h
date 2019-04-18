@@ -1,3 +1,14 @@
+//
+//  EGRE 364
+//  Spring 2019
+//
+//  adc.h
+//
+//  written by Xander Will / George Constantine
+//
+//  'Analog->Digital Converter driver'
+//
+
 #pragma once
 
 #include "stm32l476xx.h"

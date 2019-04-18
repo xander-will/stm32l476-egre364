@@ -1,3 +1,8 @@
+// not written by us
+// but it's nice so
+// we're sticking with
+// it :)
+
 #pragma once
 
 #include "stm32l476xx.h"
