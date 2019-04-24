@@ -141,10 +141,25 @@ ADC_Channel *ADC_CreateChannel(ADC_TypeDef *ADCx, GPIO_Pin_Info *pin) {
 	a->ADCx = ADCx;
 	a->pin	= pin;
 	a->channel = pin_to_channel(pin);
+	a->resolution = (ADCx->CFGR & 3 << 3) >> 3;	// read the resolution value from the CFGR register
+	
 	ADCx->DIFSEL |= 1ul << a->channel;
+	//ADCx-> // I forgot what I was doing here :(
+	if (a->channel < 10) {
+		ADCx->SMPR1 &= ~(7 << a->channel);	// set the sample time to 12.5 cycles
+		ADCx->SMPR1 &= 2 << a->channel;	
+	}
+	else {
+		ADCx->SMPR2 &= ~(7 << (a->channel - 10));	// set the sample time to 12.5 cycles
+		ADCx->SMPR2 &= 2 << (a->channel - 10);	
+	}
+	
 	return a;
 }
 
-uint16_t ADC_GetData(ADC_Channel *channel) {
+uint16_t ADC_GetData(ADC_Channel *a) {
+	a->ADCx->JSQR &= ~(0x1FFF); // clear JSQ1, JEXTEN, JL = 1 conversion
+	a->ADCx->JSQR |= a->channel << 8; // set JSQ1
+	
 	
 }
