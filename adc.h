@@ -6,7 +6,7 @@
 //
 //  written by Xander Will / George Constantine
 //
-//  'Analog->Digital Converter driver'
+//  'Analog-to-Digital Converter driver'
 //
 
 #pragma once
@@ -52,6 +52,8 @@ void ADC_Init(ADC_TypeDef *ADCx, int resolution) {
 }
 void ADC_Enable(ADC_TypeDef *ADCx) {
 	int wait_time;
+	
+	ADCx->CR |= ADC_CR_ADEN;
 	
 	// ADC wakeup, as written by Yifeng Zu
 	if ((ADCx->CR & ADC_CR_DEEPPWD) == ADC_CR_DEEPPWD)
@@ -144,7 +146,8 @@ ADC_Channel *ADC_CreateChannel(ADC_TypeDef *ADCx, GPIO_Pin_Info *pin) {
 	a->resolution = (ADCx->CFGR & 3 << 3) >> 3;	// read the resolution value from the CFGR register
 	
 	ADCx->DIFSEL |= 1ul << a->channel;
-	//ADCx-> // I forgot what I was doing here :(
+	ADCx->CFGR &= ~ADC_CFGR_CONT;
+	ADCx->CFGR &= ~(3ul << 10); // clear EXTEN bits
 	if (a->channel < 10) {
 		ADCx->SMPR1 &= ~(7 << a->channel);	// set the sample time to 12.5 cycles
 		ADCx->SMPR1 &= 2 << a->channel;	
@@ -158,8 +161,12 @@ ADC_Channel *ADC_CreateChannel(ADC_TypeDef *ADCx, GPIO_Pin_Info *pin) {
 }
 
 uint16_t ADC_GetData(ADC_Channel *a) {
-	a->ADCx->JSQR &= ~(0x1FFF); // clear JSQ1, JEXTEN, JL = 1 conversion
-	a->ADCx->JSQR |= a->channel << 8; // set JSQ1
+	a->ADCx->SQR1 &= ~(0xF); // set to 1 conversion
+	a->ADCx->SQR1 |= a->channel << 6; // set JSQ1
 	
+	a->ADCx->CR |= ADC_CR_ADSTART;
 	
+	while (!(ADC123_COMMON->CSR & ADC_CSR_EOC_MST));
+
+	return a->ADCx->CR;
 }
