@@ -132,7 +132,7 @@ static int pin_to_channel(GPIO_Pin_Info *pin) {
 	}
 }
 GPIO_Pin_Info *ADC_PinInit(char port, uint8_t pin, GPIO_PUPDR_ENUM pupd) {
-	GPIO_Pin_Info *p = GPIO_PinInit(port, pin, MODER_AF, OTYPER_PP, OSPEEDR_HS, pupd);
+	GPIO_Pin_Info *p = GPIO_PinInit(port, pin, MODER_AM, OTYPER_PP, OSPEEDR_HS, pupd);
 	p->port->ASCR |= 1ul << p->pin_num;
 	return p; 
 }
