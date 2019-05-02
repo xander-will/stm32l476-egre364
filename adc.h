@@ -33,6 +33,17 @@ void ADC_Init(ADC_TypeDef *ADCx, int resolution) {
 	ADC123_COMMON->CCR |= 1 << 16;		
 	ADC123_COMMON->CCR &= ~0x1F;						// set ADCs as independent (00000)
 	
+	int wait_time;
+	
+	
+	// ADC wakeup, as written by Yifeng Zu
+	if ((ADCx->CR & ADC_CR_DEEPPWD) == ADC_CR_DEEPPWD)
+		ADCx->CR &= ~ADC_CR_DEEPPWD;
+	ADCx->CR |= ADC_CR_ADVREGEN;	// enable internal voltage regulator
+	wait_time = WAIT_LEN;
+	while (wait_time != 0)
+		wait_time--;
+	
 	ADCx->CFGR &= ~(0x3 << 3);	// selecting resolution
 	switch (resolution) {
 		default: case 12:
@@ -49,6 +60,9 @@ void ADC_Init(ADC_TypeDef *ADCx, int resolution) {
 			break;
 	}
 	ADCx->CFGR &= ~ADC_CFGR_ALIGN;
+	
+	ADCx->CR |= ADC_CR_ADEN;
+	while (!(ADCx->ISR & ADC_ISR_ADRDY));
 }
 void ADC_Enable(ADC_TypeDef *ADCx) {
 	int wait_time;
@@ -150,11 +164,11 @@ ADC_Channel *ADC_CreateChannel(ADC_TypeDef *ADCx, GPIO_Pin_Info *pin) {
 	ADCx->CFGR &= ~(3ul << 10); // clear EXTEN bits
 	if (a->channel < 10) {
 		ADCx->SMPR1 &= ~(7 << a->channel);	// set the sample time to 12.5 cycles
-		ADCx->SMPR1 &= 2 << a->channel;	
+		ADCx->SMPR1 |= 2 << a->channel;	
 	}
 	else {
 		ADCx->SMPR2 &= ~(7 << (a->channel - 10));	// set the sample time to 12.5 cycles
-		ADCx->SMPR2 &= 2 << (a->channel - 10);	
+		ADCx->SMPR2 |= 2 << (a->channel - 10);	
 	}
 	
 	return a;
@@ -166,7 +180,7 @@ uint16_t ADC_GetData(ADC_Channel *a) {
 	
 	a->ADCx->CR |= ADC_CR_ADSTART;
 	
-	while (!(ADC123_COMMON->CSR & ADC_CSR_EOC_MST));
+	while ((ADC123_COMMON->CSR & ADC_CSR_EOC_MST));
 
-	return a->ADCx->CR;
+	return a->ADCx->DR;
 }
