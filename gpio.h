@@ -58,7 +58,7 @@ typedef enum {
 	ODR_HIGH	=	1ul
 } GPIO_ODR_ENUM;
 
-typedef struct {
+struct GPIO_Pin_Struct {
 	GPIO_TypeDef* 		port;
 	char							port_char;
 	uint8_t 					pin_num;
@@ -66,7 +66,9 @@ typedef struct {
 	GPIO_OTYPER_ENUM  type;
 	GPIO_SPEEDR_ENUM  speed;
 	GPIO_PUPDR_ENUM		pupd;
-} GPIO_Pin_Info;
+};
+
+typedef struct GPIO_Pin_Struct *GPIO_Pin;
 
 static uint32_t ModeMaskGenerator(uint32_t mode, uint32_t pin_mask) {
 	uint32_t i, new_mode, mask = 0;
@@ -80,14 +82,14 @@ static uint32_t ModeMaskGenerator(uint32_t mode, uint32_t pin_mask) {
 	return mask & pin_mask;
 }
 
-GPIO_Pin_Info *GPIO_PinInit(char port, uint8_t pin, GPIO_MODER_ENUM mode, GPIO_OTYPER_ENUM type, GPIO_SPEEDR_ENUM speed, GPIO_PUPDR_ENUM pupd) {
+GPIO_Pin GPIO_PinInit(char port, uint8_t pin, GPIO_MODER_ENUM mode, GPIO_OTYPER_ENUM type, GPIO_SPEEDR_ENUM speed, GPIO_PUPDR_ENUM pupd) {
 	/* tell it what port/pin/options you want
 		 and it will initialize the pin, and return
 		 a GPIO_Pin_Info struct for you to use */
 	char a_char;
 	uint32_t clock_enable_pin, pin2;
 	GPIO_TypeDef *gpio_port;
-	GPIO_Pin_Info *new_pin_info;
+	GPIO_Pin new_pin_info;
 	
 	a_char = port >= 'a' ? 'a' : 'A'; 
 	
@@ -120,7 +122,7 @@ GPIO_Pin_Info *GPIO_PinInit(char port, uint8_t pin, GPIO_MODER_ENUM mode, GPIO_O
 	gpio_port->PUPDR &= ~(TWOBIT_MASK << pin2);
 	gpio_port->PUPDR |= pupd << pin2;
 	
-	new_pin_info = malloc(sizeof(GPIO_Pin_Info));
+	new_pin_info = malloc(sizeof(struct GPIO_Pin_Struct));
 	new_pin_info->port = gpio_port;
 	new_pin_info->port_char = port >= 'a' ? port - 0x20 : port;
 	new_pin_info->pin_num = pin;
@@ -132,11 +134,11 @@ GPIO_Pin_Info *GPIO_PinInit(char port, uint8_t pin, GPIO_MODER_ENUM mode, GPIO_O
 	return new_pin_info;
 }
 
-GPIO_Pin_Info *GPIO_PinModify(GPIO_Pin_Info *pin_info, GPIO_MODER_ENUM mode, GPIO_OTYPER_ENUM type, GPIO_SPEEDR_ENUM speed, GPIO_PUPDR_ENUM pupd) {
+GPIO_Pin GPIO_PinModify(GPIO_Pin pin_info, GPIO_MODER_ENUM mode, GPIO_OTYPER_ENUM type, GPIO_SPEEDR_ENUM speed, GPIO_PUPDR_ENUM pupd) {
 	uint8_t pin, pin2;
 	GPIO_TypeDef *gpio_port;
 	
-  pin	= pin_info->pin_num;
+	pin = pin_info->pin_num;
 	gpio_port = pin_info->port;
 	
 	if (mode < MODER_DI || MODER_AM < mode)
@@ -168,7 +170,7 @@ GPIO_Pin_Info *GPIO_PinModify(GPIO_Pin_Info *pin_info, GPIO_MODER_ENUM mode, GPI
 	return pin_info;
 }
 
-GPIO_Pin_Info **GPIO_PinBatchInit(char port, uint8_t first_pin, uint8_t last_pin, GPIO_MODER_ENUM mode, GPIO_OTYPER_ENUM type, GPIO_SPEEDR_ENUM speed, GPIO_PUPDR_ENUM pupd) {
+GPIO_Pin *GPIO_PinBatchInit(char port, uint8_t first_pin, uint8_t last_pin, GPIO_MODER_ENUM mode, GPIO_OTYPER_ENUM type, GPIO_SPEEDR_ENUM speed, GPIO_PUPDR_ENUM pupd) {
 	/* can initialize a row of pins on the
 		 same port all at once, and returns
 		 an array of Pin_Info pointers from
@@ -176,7 +178,7 @@ GPIO_Pin_Info **GPIO_PinBatchInit(char port, uint8_t first_pin, uint8_t last_pin
 	char a_char;
 	uint32_t i, clock_enable_pin, num_of_pins, mask, mask2;
 	GPIO_TypeDef *gpio_port;
-	GPIO_Pin_Info **new_pin_array;
+	GPIO_Pin *new_pin_array;
 	
 	a_char = port >= 'a' ? 'a' : 'A';
 	num_of_pins = last_pin - first_pin + 1;
@@ -213,7 +215,7 @@ GPIO_Pin_Info **GPIO_PinBatchInit(char port, uint8_t first_pin, uint8_t last_pin
 	gpio_port->PUPDR &= ~mask2;
 	gpio_port->PUPDR |= ModeMaskGenerator(pupd, mask2);
 	
-	new_pin_array = malloc(sizeof(GPIO_Pin_Info)*num_of_pins);
+	new_pin_array = malloc(sizeof(struct GPIO_Pin_Struct)*num_of_pins);
 	for (i = 0; i < num_of_pins; i++) {
 		new_pin_array[i] = malloc(sizeof(GPIO_Pin_Info));
 		new_pin_array[i]->port = gpio_port;
@@ -228,17 +230,17 @@ GPIO_Pin_Info **GPIO_PinBatchInit(char port, uint8_t first_pin, uint8_t last_pin
 	return new_pin_array;
 }
 
-void GPIO_PinOn(const GPIO_Pin_Info *pin) {
+void GPIO_PinOn(const GPIO_Pin pin) {
 	/* turns on whatever pin is put in */
 	pin->port->ODR |= (1ul << pin->pin_num);
 }
 
-void GPIO_PinOff(const GPIO_Pin_Info *pin) {
+void GPIO_PinOff(const GPIO_Pin pin) {
 	/* turns off whatever pin is put in */
 	pin->port->ODR &= ~(1ul << pin->pin_num);
 }
 
-bool GPIO_PinCheck(const GPIO_Pin_Info *pin) {
+bool GPIO_PinCheck(const GPIO_Pin pin) {
 	/* returns a boolean result for an input pin */
 	uint32_t mask = (1ul << pin->pin_num);
 	return (pin->port->IDR & mask) == mask;
