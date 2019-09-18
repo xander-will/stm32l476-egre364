@@ -12,56 +12,53 @@
 
 #include "stm32l476xx.h"
 #include "stdint.h"
+#include "general.h"
 
 #define TWOBIT_MASK 3ul
 
 typedef enum {
-	false = 0ul,
-	true  = 1ul	
-} bool;
-typedef enum {
-	CLOCK_ENABLE 		= 0ul,	// Clock enable
-	CLOCK_DISABLE 	= 1ul		// Clock disable
+	CLOCK_ENABLE 	= 0ul,	// Clock enable
+	CLOCK_DISABLE 	= 1ul	// Clock disable
 } GPIO_CLOCK_ENUM;
 
 typedef enum {
 	MODER_DI 	= 0ul,		// Digital input
 	MODER_DO 	= 1ul,		// Digital output
 	MODER_AF	= 2ul,		// Alternative function
-	MODER_AM 	= 3ul			// Analog mode
+	MODER_AM 	= 3ul		// Analog mode
 } GPIO_MODER_ENUM;
 
 typedef enum {
 	OTYPER_PP	= 0ul,	// Push-pull
-	OTYPER_OD	= 1ul		// Open-drain
+	OTYPER_OD	= 1ul	// Open-drain
 } GPIO_OTYPER_ENUM;
 
 typedef enum {
 	OSPEEDR_LS	= 0ul,	// Low speed
 	OSPEEDR_MS	= 1ul,	// Medium speed
 	OSPEEDR_FS	= 2ul,	// Fast speed
-	OSPEEDR_HS	= 3ul		// High speed
+	OSPEEDR_HS	= 3ul	// High speed
 } GPIO_SPEEDR_ENUM;
 
 typedef enum {
 	PUPDR_N		= 0ul,	// No pull-up, no pull-down
 	PUPDR_PU	= 1ul,	// Pull-up
-	PUPDR_PD	=	2ul,	// Pull-down
-	PUPDR_R		= 3ul		// Reserved
+	PUPDR_PD	= 2ul,	// Pull-down
+	PUPDR_R		= 3ul	// Reserved
 } GPIO_PUPDR_ENUM;
 
 typedef enum {
 	ODR_LOW		= 0ul,
-	ODR_HIGH	=	1ul
+	ODR_HIGH	= 1ul
 } GPIO_ODR_ENUM;
 
 struct GPIO_Pin_Struct {
 	GPIO_TypeDef* 		port;
-	char							port_char;
-	uint8_t 					pin_num;
+	char				port_char;
+	uint8_t 			pin_num;
 	GPIO_MODER_ENUM		mode;
-	GPIO_OTYPER_ENUM  type;
-	GPIO_SPEEDR_ENUM  speed;
+	GPIO_OTYPER_ENUM  	type;
+	GPIO_SPEEDR_ENUM  	speed;
 	GPIO_PUPDR_ENUM		pupd;
 };
 

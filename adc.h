@@ -1,10 +1,7 @@
 //
-//  EGRE 364
-//  Spring 2019
-//
 //  adc.h
 //
-//  written by Xander Will / George Constantine
+//  written by Xander Will
 //
 //  'Analog-to-Digital Converter driver'
 //
@@ -16,22 +13,24 @@
 
 #define WAIT_LEN 20 * (80000000 / 10000000)
 
-typedef struct {
-	ADC_TypeDef		*ADCx;
-	GPIO_Pin_Info *pin;
-	int						channel;
-	int						resolution;
-} ADC_Channel;
+struct ADC_Chan_Struct {
+	ADC_TypeDef*	ADCx;
+	GPIO_Pin		pin;
+	int				channel;
+	int				resolution;
+};
+
+typedef struct ADC_Chan_Struct *ADC_Channel;
 
 void ADC_Init(ADC_TypeDef *ADCx, int resolution) {
 	RCC->AHB2ENR |= RCC_AHB2ENR_ADCEN;
 	ADCx->CR &= ~ADC_CR_ADEN;
 	SYSCFG->CFGR1 |= SYSCFG_CFGR1_BOOSTEN;	// voltage booster
-	ADC123_COMMON->CCR |= ADC_CCR_VREFEN;		// conversion of internal channels
-	ADC123_COMMON->CCR &= ~(0xF << 18);			// set clock frequency to "not divided" (0000)
-	ADC123_COMMON->CCR &=	~(0x3 << 16);			// set clock sync to HCLK/1 (01)
+	ADC123_COMMON->CCR |= ADC_CCR_VREFEN;	// conversion of internal channels
+	ADC123_COMMON->CCR &= ~(0xF << 18);		// set clock frequency to "not divided" (0000)
+	ADC123_COMMON->CCR &=	~(0x3 << 16);	// set clock sync to HCLK/1 (01)
 	ADC123_COMMON->CCR |= 1 << 16;		
-	ADC123_COMMON->CCR &= ~0x1F;						// set ADCs as independent (00000)
+	ADC123_COMMON->CCR &= ~0x1F;			// set ADCs as independent (00000)
 	
 	int wait_time;
 	
@@ -77,7 +76,8 @@ void ADC_Enable(ADC_TypeDef *ADCx) {
 	while (wait_time != 0)
 		wait_time--;
 }
-static int pin_to_channel(GPIO_Pin_Info *pin) {
+
+static int pin_to_channel(GPIO_Pin pin) {
 	switch (pin->port_char) {
 		case 'A': default:
 			switch (pin->pin_num) {
@@ -145,15 +145,17 @@ static int pin_to_channel(GPIO_Pin_Info *pin) {
 			break;
 	}
 }
-GPIO_Pin_Info *ADC_PinInit(char port, uint8_t pin, GPIO_PUPDR_ENUM pupd) {
-	GPIO_Pin_Info *p = GPIO_PinInit(port, pin, MODER_AM, OTYPER_PP, OSPEEDR_HS, pupd);
+
+GPIO_Pin ADC_PinInit(char port, uint8_t pin, GPIO_PUPDR_ENUM pupd) {
+	GPIO_Pin p = GPIO_PinInit(port, pin, MODER_AM, OTYPER_PP, OSPEEDR_HS, pupd);
 	p->port->ASCR |= 1ul << p->pin_num;
 	return p; 
 }
-ADC_Channel *ADC_CreateChannel(ADC_TypeDef *ADCx, GPIO_Pin_Info *pin) {
-	ADC_Channel *a;
+
+ADC_Channel ADC_CreateChannel(ADC_TypeDef *ADCx, GPIO_Pin_Info *pin) {
+	ADC_Channel a;
 	
-	a = malloc(sizeof(ADC_Channel));
+	a = malloc(sizeof(ADC_Chan_Struct));
 	a->ADCx = ADCx;
 	a->pin	= pin;
 	a->channel = pin_to_channel(pin);
@@ -174,7 +176,7 @@ ADC_Channel *ADC_CreateChannel(ADC_TypeDef *ADCx, GPIO_Pin_Info *pin) {
 	return a;
 }
 
-uint16_t ADC_GetData(ADC_Channel *a) {
+uint16_t ADC_GetData(ADC_Channel a) {
 	a->ADCx->SQR1 &= ~(0xF); // set to 1 conversion
 	a->ADCx->SQR1 |= a->channel << 6; // set JSQ1
 	
