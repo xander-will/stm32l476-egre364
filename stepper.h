@@ -1,10 +1,7 @@
 //
-//  EGRE 364
-//  Spring 2019
-//
 //  stepper.h
 //
-//  written by Xander Will / George Constantine
+//  written by Xander Will
 //
 //  'Stepper motor functions'
 //
@@ -16,7 +13,7 @@
 #include "gpio.h"
 #include "systick.h"
 
-typedef struct {
+struct Stepper_Struct {
 	SysTickCallback 	callback;
 	GPIO_Pin_Info*		pinA;
 	GPIO_Pin_Info*		pinB;
@@ -26,26 +23,24 @@ typedef struct {
 	char							mode;
 	int								curr_step;
 	int								direction;
-} Stepper_Info;
+};
 
-GPIO_Pin_Info *Stepper_PinInit(char port, uint8_t pin) {
+typedef struct Stepper_Struct *Stepper;
+
+GPIO_Pin Stepper_PinInit(char port, uint8_t pin) {
 	return GPIO_PinInit(port, pin, MODER_DO, OTYPER_PP, OSPEEDR_HS, PUPDR_N); 
 }
-GPIO_Pin_Info **Stepper_PinBatchInit(char port, uint8_t first_pin, uint8_t last_pin) {
+GPIO_Pin *Stepper_PinBatchInit(char port, uint8_t first_pin, uint8_t last_pin) {
 	return GPIO_PinBatchInit(port, first_pin, last_pin, MODER_DO, OTYPER_PP, OSPEEDR_HS, PUPDR_N);
 }
 
 void Stepper_FullStep(void*);
 void Stepper_HalfStep(void*);
-Stepper_Info *Stepper_Init(GPIO_Pin_Info* pinA, 
-													 GPIO_Pin_Info* pinB, 
-													 GPIO_Pin_Info* pinC, 
-													 GPIO_Pin_Info* pinD, 
-													 int delay, char mode) {											 
-	Stepper_Info *s; 
+Stepper Stepper_Init(GPIO_Pin pinA, GPIO_Pin pinB, GPIO_Pin pinC, GPIO_Pin pinD, int delay, char mode) {											 
+	Stepper s; 
 	systick_func f = NULL;
 														 
-  s = malloc(sizeof(Stepper_Info));
+  s = malloc(sizeof(Stepper_Struct));
 	switch (mode) {
 		default: case 'f': case 'F':
 			f = Stepper_FullStep; break;
@@ -70,10 +65,10 @@ Stepper_Info *Stepper_Init(GPIO_Pin_Info* pinA,
 	
 	return s;
 }
-void Stepper_Reverse(Stepper_Info *s) {
+void Stepper_Reverse(Stepper s) {
 	s->direction = -s->direction;
 }	
-void Stepper_ChangeSpeed(Stepper_Info *s, int delay) {
+void Stepper_ChangeSpeed(Stepper s, int delay) {
 	SysTick_ChangeCallbackTime(s->callback, delay);
 	s->delay = delay;
 }
@@ -81,9 +76,9 @@ void Stepper_ChangeSpeed(Stepper_Info *s, int delay) {
 static uint8_t stepper_fullsteps[4] = {3, 6, 12, 9};
 void Stepper_FullStep(void *p) {
 	uint8_t step;
-	Stepper_Info *s;
+	Stepper s;
 	
-	s = (Stepper_Info*)p; 
+	s = (Stepper)p; 
 	s->curr_step += s->direction;
 	if (s->curr_step > 3)
 		s->curr_step = 0;
@@ -100,9 +95,9 @@ void Stepper_FullStep(void *p) {
 static uint8_t stepper_halfsteps[8] = {1, 3, 2, 6, 4, 12, 8, 9};
 void Stepper_HalfStep(void *p) {
 	uint8_t step;
-	Stepper_Info *s;
+	Stepper s;
 	
-	s = (Stepper_Info*)p; 
+	s = (Stepper)p; 
 	s->curr_step += s->direction;
 	if (s->curr_step > 7)
 		s->curr_step = 0;

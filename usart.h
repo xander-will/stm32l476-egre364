@@ -1,10 +1,7 @@
 //
-//  EGRE 364
-//  Spring 2019
-//
 //  usart.h
 //
-//  written by Xander Will / George Constantine
+//  written by Xander Will
 //
 //  'USART communication wrapping'
 //
@@ -56,7 +53,7 @@ typedef enum {
 	PARITY_ODD	= 0x200ul
 } USART_PARITY_ENUM;
 
-void USART_Init(GPIO_Pin_Info *tx_pin, USART_TypeDef *USARTx, uint32_t baud_rate, USART_WORDLEN_ENUM wordlen, USART_STOPBIT_ENUM stopbit, USART_PARITYEN_ENUM par_en, USART_PARITY_ENUM parity, USART_OVER8_ENUM over8) {
+void USART_Init(GPIO_Pin tx_pin, USART_TypeDef *USARTx, uint32_t baud_rate, USART_WORDLEN_ENUM wordlen, USART_STOPBIT_ENUM stopbit, USART_PARITYEN_ENUM par_en, USART_PARITY_ENUM parity, USART_OVER8_ENUM over8) {
 	uint32_t af, usartdiv; 
 	uint8_t low_nyb;
 	

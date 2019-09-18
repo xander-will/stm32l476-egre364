@@ -1,10 +1,7 @@
 //
-//  EGRE 364
-//  Spring 2019
-//
 //  exti.h
 //
-//  written by Xander Will / George Constantine
+//  written by Xander Will
 //
 //  'External interrupt wrapper'
 //
@@ -20,7 +17,7 @@ typedef void (*interrupt_func)(void);
 
 static interrupt_func exti_callbacks[16] = {NULL}; // 
 
-void EXTI_RegisterPin(const GPIO_Pin_Info* pin, interrupt_func callback, uint32_t priority, char edge) {
+void EXTI_RegisterPin(const GPIO_Pin pin, interrupt_func callback, uint32_t priority, char edge) {
 	/* registers a pin to have an external interrupt,
 		 and registers a callback function for said
 		 interrupt to call. use carefully: using
@@ -64,7 +61,7 @@ void EXTI_RegisterPin(const GPIO_Pin_Info* pin, interrupt_func callback, uint32_
 	NVIC_EnableIRQ(IRQnum);
 }
 
-void EXTI_ChangeCallback(const GPIO_Pin_Info *pin, interrupt_func new_cb) {
+void EXTI_ChangeCallback(const GPIO_Pin pin, interrupt_func new_cb) {
 	exti_callbacks[pin->pin_num] = new_cb;
 }
 
