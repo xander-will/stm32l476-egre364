@@ -1,10 +1,7 @@
 //
-//  EGRE 364
-//  Spring 2019
-//
 //  gpio.h
 //
-//  written by Xander Will / George Constantine
+//  written by Xander Will
 //
 //  'GPIO pin wrapper'
 //
